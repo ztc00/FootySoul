@@ -1,0 +1,10 @@
+# Edge Functions: skip gateway JWT check so our functions receive the request
+# and validate the user with getUser(jwt), returning 401 only when invalid.
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.confirm-payment]
+verify_jwt = false
+
+[functions.backfill-game-coordinates]
+verify_jwt = false
