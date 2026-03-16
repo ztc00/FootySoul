@@ -9,7 +9,7 @@ export default function PrivacyPolicyScreen() {
 
       <Text style={styles.section}>1. Information We Collect</Text>
       <Text style={styles.body}>
-        When you use FootySoul, we collect information you provide directly: your name, email address, phone number, and payment information. We also collect usage data such as games joined, venues visited, and in-app interactions.
+        When you use Footy Soul, we collect information you provide directly: your name, email address, phone number, and payment information. We also collect usage data such as games joined, venues visited, and in-app interactions.
       </Text>
 
       <Text style={styles.section}>2. How We Use Your Information</Text>

@@ -279,7 +279,7 @@ export default function GameDetailsScreen() {
       if (payNow && isStripeConfigured) {
         const clientSecret = await createPaymentIntent(game.id, spotsToBook);
         const { error: initError } = await stripe!.initPaymentSheet({
-          merchantDisplayName: 'FootySoul',
+          merchantDisplayName: 'Footy Soul',
           paymentIntentClientSecret: clientSecret,
           defaultBillingDetails: { name: user.email || 'Player' },
           allowsDelayedPaymentMethods: false,

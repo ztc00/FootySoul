@@ -9,12 +9,12 @@ export default function TermsScreen() {
 
       <Text style={styles.section}>1. Acceptance of Terms</Text>
       <Text style={styles.body}>
-        By using FootySoul, you agree to these terms. If you do not agree, please do not use the app.
+        By using Footy Soul, you agree to these terms. If you do not agree, please do not use the app.
       </Text>
 
       <Text style={styles.section}>2. Use of Service</Text>
       <Text style={styles.body}>
-        FootySoul is a platform for organising and joining football games. You must be at least 16 years old to use this service. You are responsible for maintaining the security of your account.
+        Footy Soul is a platform for organising and joining football games. You must be at least 16 years old to use this service. You are responsible for maintaining the security of your account.
       </Text>
 
       <Text style={styles.section}>3. Bookings and Payments</Text>
@@ -34,7 +34,7 @@ export default function TermsScreen() {
 
       <Text style={styles.section}>6. Liability</Text>
       <Text style={styles.body}>
-        FootySoul is a booking platform only. We are not responsible for injuries, disputes, or issues that occur during games. Participation in football activities is at your own risk.
+        Footy Soul is a booking platform only. We are not responsible for injuries, disputes, or issues that occur during games. Participation in football activities is at your own risk.
       </Text>
 
       <Text style={styles.section}>7. Changes to Terms</Text>

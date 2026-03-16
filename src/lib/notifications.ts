@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
 export async function registerForPushNotifications() {
+  if (!supabase) return;
   let token;
 
   if (Platform.OS === 'android') {
@@ -28,14 +29,23 @@ export async function registerForPushNotifications() {
   }
   
   token = (await Notifications.getExpoPushTokenAsync()).data;
-  
-  // Save token to Supabase
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user && token) {
+
+  // Save token to Supabase only when a valid session exists.
+  // This avoids noisy "Invalid Refresh Token" errors on cold starts with stale auth state.
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user || !token) return token;
+
     await supabase
       .from('profiles')
       .update({ push_token: token })
-      .eq('user_id', user.id);
+      .eq('user_id', session.user.id);
+  } catch (error: any) {
+    const message = error?.message || '';
+    if (!message.includes('Invalid Refresh Token')) {
+      console.warn('Push token save failed:', message || error);
+    }
+    // Ignore stale session errors; auth provider handles cleanup separately.
   }
 
   return token;

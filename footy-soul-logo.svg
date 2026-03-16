@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Sphere gradient -->
+    <radialGradient id="sphere" cx="42%" cy="36%" r="52%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#EEEEEE;stop-opacity:0.92" />
+      <stop offset="85%" style="stop-color:#C8C8C8;stop-opacity:0.65" />
+      <stop offset="100%" style="stop-color:#AAAAAA;stop-opacity:0.35" />
+    </radialGradient>
+
+    <!-- Highlight -->
+    <radialGradient id="highlight" cx="40%" cy="32%" r="22%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Flame going DOWN from sphere - bright near sphere, fading at bottom -->
+    <linearGradient id="flameDown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.7" />
+      <stop offset="30%" style="stop-color:#FFFFFF;stop-opacity:0.45" />
+      <stop offset="60%" style="stop-color:#FFFFFF;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+
+    <linearGradient id="flameDownBright" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.85" />
+      <stop offset="25%" style="stop-color:#FFFFFF;stop-opacity:0.55" />
+      <stop offset="55%" style="stop-color:#FFFFFF;stop-opacity:0.25" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+
+    <linearGradient id="flameDownSoft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.5" />
+      <stop offset="40%" style="stop-color:#FFFFFF;stop-opacity:0.25" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+
+    <!-- Ambient glow -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+
+    <filter id="softGlow"><feGaussianBlur stdDeviation="18" /></filter>
+    <filter id="medGlow"><feGaussianBlur stdDeviation="8" /></filter>
+    <filter id="flameBlur"><feGaussianBlur stdDeviation="11" /></filter>
+    <filter id="thinBlur"><feGaussianBlur stdDeviation="4" /></filter>
+    <filter id="wideBlur"><feGaussianBlur stdDeviation="22" /></filter>
+
+    <clipPath id="roundClip">
+      <rect x="0" y="0" width="512" height="512" rx="96" ry="96" />
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="512" height="512" rx="96" ry="96" fill="#0B0B0B" />
+
+  <g clip-path="url(#roundClip)">
+
+    <!-- Big ambient glow centered on flame area -->
+    <ellipse cx="256" cy="320" rx="200" ry="220" fill="url(#glow)" filter="url(#wideBlur)" />
+    <ellipse cx="256" cy="280" rx="140" ry="160" fill="rgba(255,255,255,0.06)" filter="url(#softGlow)" />
+
+    <!-- === FLAMES TRAILING BELOW SPHERE (sphere is rising UP, fire trails DOWN) === -->
+
+    <!-- Outermost wide flame bloom - big white spread -->
+    <path d="
+      M 256 245
+      C 240 280, 155 340, 120 420
+      C 100 465, 95 500, 95 540
+      L 417 540
+      C 417 500, 412 465, 392 420
+      C 357 340, 272 280, 256 245
+      Z
+    " fill="url(#flameDownSoft)" filter="url(#wideBlur)" opacity="0.5"/>
+
+    <!-- Wide outer flame -->
+    <path d="
+      M 256 240
+      C 242 275, 170 330, 140 400
+      C 122 445, 118 485, 118 540
+      L 394 540
+      C 394 485, 390 445, 372 400
+      C 342 330, 270 275, 256 240
+      Z
+    " fill="url(#flameDown)" filter="url(#flameBlur)" opacity="0.6"/>
+
+    <!-- Mid flame layer -->
+    <path d="
+      M 256 238
+      C 246 270, 195 325, 172 390
+      C 155 435, 150 475, 150 540
+      L 362 540
+      C 362 475, 357 435, 340 390
+      C 317 325, 266 270, 256 238
+      Z
+    " fill="url(#flameDownBright)" filter="url(#medGlow)" opacity="0.6"/>
+
+    <!-- Inner bright flame core -->
+    <path d="
+      M 256 235
+      C 250 265, 218 318, 205 380
+      C 195 425, 192 465, 192 540
+      L 320 540
+      C 320 465, 317 425, 307 380
+      C 294 318, 262 265, 256 235
+      Z
+    " fill="url(#flameDownBright)" filter="url(#thinBlur)" opacity="0.55"/>
+
+    <!-- Innermost white-hot core -->
+    <path d="
+      M 256 240
+      C 253 265, 238 310, 230 370
+      C 224 415, 222 460, 222 540
+      L 290 540
+      C 290 460, 288 415, 282 370
+      C 274 310, 259 265, 256 240
+      Z
+    " fill="url(#flameDownBright)" opacity="0.4"/>
+
+    <!-- Side flame licks trailing down-left -->
+    <path d="
+      M 205 260 Q 165 320 145 400 Q 130 460 132 540
+    " fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="20" filter="url(#flameBlur)" stroke-linecap="round"/>
+
+    <!-- Side flame lick trailing down-right -->
+    <path d="
+      M 307 260 Q 347 320 367 400 Q 382 460 380 540
+    " fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="18" filter="url(#flameBlur)" stroke-linecap="round"/>
+
+    <!-- Outer wispy tendrils -->
+    <path d="M 185 280 Q 140 360 115 460" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="16" filter="url(#flameBlur)" stroke-linecap="round"/>
+    <path d="M 327 280 Q 372 360 397 460" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14" filter="url(#flameBlur)" stroke-linecap="round"/>
+
+    <!-- Small fire detail licks around sphere edges -->
+    <path d="M 190 225 Q 178 250 175 280" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="8" filter="url(#medGlow)" stroke-linecap="round"/>
+    <path d="M 322 225 Q 334 250 337 280" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="7" filter="url(#medGlow)" stroke-linecap="round"/>
+    <path d="M 200 240 Q 185 262 182 290" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6" filter="url(#medGlow)" stroke-linecap="round"/>
+    <path d="M 312 240 Q 327 262 330 290" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="5" filter="url(#medGlow)" stroke-linecap="round"/>
+
+    <!-- Ember particles scattered in the fire trail -->
+    <circle cx="215" cy="320" r="3" fill="white" opacity="0.35" filter="url(#thinBlur)"/>
+    <circle cx="298" cy="340" r="2.5" fill="white" opacity="0.3" filter="url(#thinBlur)"/>
+    <circle cx="240" cy="380" r="2.5" fill="white" opacity="0.25" filter="url(#thinBlur)"/>
+    <circle cx="278" cy="400" r="2" fill="white" opacity="0.2" filter="url(#thinBlur)"/>
+    <circle cx="195" cy="370" r="2" fill="white" opacity="0.2" filter="url(#thinBlur)"/>
+    <circle cx="320" cy="385" r="2.2" fill="white" opacity="0.22" filter="url(#thinBlur)"/>
+    <circle cx="230" cy="430" r="1.8" fill="white" opacity="0.15" filter="url(#thinBlur)"/>
+    <circle cx="285" cy="445" r="1.5" fill="white" opacity="0.12" filter="url(#thinBlur)"/>
+    <circle cx="175" cy="410" r="1.8" fill="white" opacity="0.12" filter="url(#thinBlur)"/>
+    <circle cx="340" cy="420" r="1.5" fill="white" opacity="0.1" filter="url(#thinBlur)"/>
+
+    <!-- === SPHERE (positioned upper area — it's rising) === -->
+    <!-- Outer glow around sphere -->
+    <circle cx="256" cy="195" r="105" fill="rgba(255,255,255,0.07)" filter="url(#softGlow)" />
+
+    <!-- Main sphere -->
+    <circle cx="256" cy="195" r="80" fill="url(#sphere)" />
+
+    <!-- Subtle bold outline -->
+    <circle cx="256" cy="195" r="80" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="2.5"/>
+
+    <!-- Inner highlight -->
+    <circle cx="256" cy="195" r="80" fill="url(#highlight)" />
+
+    <!-- Shine spot -->
+    <ellipse cx="234" cy="167" rx="23" ry="15" fill="white" opacity="0.45" transform="rotate(-20, 234, 167)"/>
+    <circle cx="229" cy="163" r="7" fill="white" opacity="0.8"/>
+
+  </g>
+</svg>

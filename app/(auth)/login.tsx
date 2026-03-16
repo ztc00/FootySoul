@@ -11,12 +11,13 @@ import {
   ScrollView,
   Platform,
   Pressable,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
+import Constants from 'expo-constants';
 import { supabase } from '@/lib/supabase';
 import { colors, spacing, fontSizes, fontWeights, radius } from '@/theme';
 
@@ -24,13 +25,10 @@ import { colors, spacing, fontSizes, fontWeights, radius } from '@/theme';
 WebBrowser.maybeCompleteAuthSession();
 
 type Screen = 'welcome' | 'otp' | 'password';
-type InputMode = 'email' | 'phone';
 
 export default function LoginScreen() {
   const [screen, setScreen] = useState<Screen>('welcome');
-  const [inputMode, setInputMode] = useState<InputMode>('email');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
@@ -112,28 +110,37 @@ export default function LoginScreen() {
     }
   };
 
-  // ─── Google Sign In ──────────────────────────────────────
+  // ─── Google Sign In (Supabase OAuth via in-app browser) ──
   const handleGoogleSignIn = async () => {
     if (!supabase) return;
     setLoading(true);
     try {
-      const redirectUrl = makeRedirectUri();
+      const redirectTo = 'footysoul://google-auth';
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo,
           skipBrowserRedirect: true,
         },
       });
       if (error) throw error;
       if (!data.url) throw new Error('No OAuth URL returned');
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
       if (result.type === 'success' && result.url) {
-        // Extract tokens from the redirect URL fragment
         const url = result.url;
-        const params = new URLSearchParams(url.includes('#') ? url.split('#')[1] : url.split('?')[1]);
+        // Tokens are in the URL fragment (#access_token=...&refresh_token=...)
+        const fragment = url.includes('#') ? url.split('#')[1] : '';
+        const query = url.includes('?') ? url.split('?')[1]?.split('#')[0] : '';
+        const params = new URLSearchParams(fragment || query);
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
+        const errorDesc = params.get('error_description') || params.get('error');
+
+        if (errorDesc) {
+          throw new Error(decodeURIComponent(errorDesc));
+        }
         if (accessToken && refreshToken) {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -142,6 +149,10 @@ export default function LoginScreen() {
           if (sessionError) throw sessionError;
           await ensureProfile();
           router.replace('/(tabs)/home');
+        } else {
+          throw new Error(
+            'Redirect did not include sign-in tokens. In Supabase Dashboard → Authentication → URL Configuration, add this to Redirect URLs: footysoul://google-auth'
+          );
         }
       }
     } catch (err: any) {
@@ -162,32 +173,20 @@ export default function LoginScreen() {
   // ─── Send OTP ────────────────────────────────────────────
   const handleSendOTP = async () => {
     if (!supabase) return;
-    if (inputMode === 'email' && !email.trim()) {
+    if (!email.trim()) {
       Alert.alert('Error', 'Please enter your email');
-      return;
-    }
-    if (inputMode === 'phone' && !phone) {
-      Alert.alert('Error', 'Please enter your phone number');
       return;
     }
     setLoading(true);
     try {
-      if (inputMode === 'email') {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: {
-            shouldCreateUser: true,
-            emailRedirectTo: 'footysoul://auth/confirm',
-          },
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phone.startsWith('+') ? phone : `+971${phone}`,
-          options: { shouldCreateUser: true },
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: 'footysoul://auth/confirm',
+        },
+      });
+      if (error) throw error;
       setScreen('otp');
       setResendCooldown(60);
     } catch (err: any) {
@@ -205,27 +204,14 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      if (inputMode === 'email') {
-        const { error } = await supabase.auth.verifyOtp({
-          email: email.trim(),
-          token: otp,
-          type: 'email',
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.verifyOtp({
-          phone: phone.startsWith('+') ? phone : `+971${phone}`,
-          token: otp,
-          type: 'sms',
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp,
+        type: 'email',
+      });
+      if (error) throw error;
       await ensureProfile();
-      if (inputMode === 'email') {
-        router.replace('/(auth)/set-password');
-      } else {
-        router.replace('/(tabs)/home');
-      }
+      router.replace('/(auth)/set-password');
     } catch (err: any) {
       Alert.alert('Error', err?.message || 'Invalid code');
     } finally {
@@ -274,7 +260,7 @@ export default function LoginScreen() {
   // OTP verification screen
   // ═══════════════════════════════════════════════════════════
   if (screen === 'otp') {
-    const destination = inputMode === 'email' ? email : `+971${phone}`;
+    const destination = email;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -287,12 +273,12 @@ export default function LoginScreen() {
         >
           <View style={styles.iconWrap}>
             <Ionicons
-              name={inputMode === 'email' ? 'mail-open-outline' : 'chatbubble-outline'}
+              name="mail-open-outline"
               size={48}
               color={colors.accent}
             />
           </View>
-          <Text style={styles.title}>Check your {inputMode === 'email' ? 'email' : 'phone'}</Text>
+          <Text style={styles.title}>Check your email</Text>
           <Text style={styles.subtitle}>
             We sent a code to{' '}
             <Text style={styles.subtitleBold}>{destination}</Text>
@@ -335,9 +321,7 @@ export default function LoginScreen() {
             style={styles.linkButton}
             onPress={() => { setScreen('welcome'); setOtp(''); }}
           >
-            <Text style={styles.linkText}>
-              ← Change {inputMode === 'email' ? 'email' : 'number'}
-            </Text>
+            <Text style={styles.linkText}>← Change email</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -433,10 +417,13 @@ export default function LoginScreen() {
       >
         {/* Branding */}
         <View style={styles.brandRow}>
-          <Ionicons name="football" size={48} color={colors.accent} />
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.brandLogo}
+            resizeMode="contain"
+          />
         </View>
-        <Text style={styles.title}>FootySoul</Text>
-        <Text style={styles.tagline}>Pick-up games in Dubai</Text>
+        <Text style={styles.title}>Footy Soul</Text>
 
         {!supabase ? (
           <View style={styles.configBanner}>
@@ -475,33 +462,17 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* ─── Email / Phone Input ─── */}
-            {inputMode === 'email' ? (
-              <TextInput
-                style={styles.input}
-                placeholder="Email address"
-                placeholderTextColor={colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            ) : (
-              <View style={styles.phoneInputContainer}>
-                <View style={styles.phonePrefixWrap}>
-                  <Text style={styles.phonePrefix}>🇦🇪 +971</Text>
-                </View>
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder="50 123 4567"
-                  placeholderTextColor={colors.textMuted}
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                />
-              </View>
-            )}
+            {/* ─── Email Input ─── */}
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor={colors.textMuted}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
 
             <TouchableOpacity
               style={[styles.primaryButton, loading && styles.buttonDisabled]}
@@ -513,16 +484,6 @@ export default function LoginScreen() {
               ) : (
                 <Text style={styles.primaryButtonText}>Continue</Text>
               )}
-            </TouchableOpacity>
-
-            {/* ─── Toggle email ↔ phone ─── */}
-            <TouchableOpacity
-              style={styles.toggleLink}
-              onPress={() => setInputMode(inputMode === 'email' ? 'phone' : 'email')}
-            >
-              <Text style={styles.toggleLinkText}>
-                {inputMode === 'email' ? 'Use phone number instead' : 'Use email instead'}
-              </Text>
             </TouchableOpacity>
 
             {/* ─── Password link ─── */}
@@ -557,6 +518,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[2],
   },
+  brandLogo: {
+    width: 96,
+    height: 96,
+    borderRadius: 20,
+  },
   iconWrap: {
     alignItems: 'center',
     marginBottom: spacing[4],
@@ -565,7 +531,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes['3xl'],
     fontWeight: fontWeights.bold,
     textAlign: 'center',
-    marginBottom: spacing[1],
+    marginBottom: spacing[5],
     color: colors.text,
   },
   tagline: {

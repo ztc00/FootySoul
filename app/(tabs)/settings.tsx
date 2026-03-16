@@ -213,6 +213,16 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <PressableScale
             style={styles.menuItem}
+            onPress={() => router.push('/support')}
+          >
+            <View style={styles.menuIconWrap}>
+              <Ionicons name="help-circle-outline" size={22} color={colors.textSecondary} />
+            </View>
+            <Text style={styles.menuText}>Help & FAQ</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </PressableScale>
+          <PressableScale
+            style={styles.menuItem}
             onPress={() => Linking.openURL('mailto:support@footysoul.com').catch(() => Alert.alert('Contact Support', 'support@footysoul.com'))}
           >
             <View style={styles.menuIconWrap}>
@@ -245,7 +255,7 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>FootySoul</Text>
+        <Text style={styles.footerText}>Footy Soul</Text>
         <Text style={styles.footerVersion}>v1.0.0</Text>
       </View>
     </ScrollView>

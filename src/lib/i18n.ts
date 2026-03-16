@@ -16,7 +16,7 @@ export function getLocale(): Locale {
 // Translation keys - to be expanded
 const translations: Record<Locale, Record<string, string>> = {
   en: {
-    'app.name': 'FootySoul',
+    'app.name': 'Footy Soul',
     'auth.login': 'Login',
     'auth.phone': 'Phone',
     'auth.email': 'Email',
@@ -25,7 +25,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Add more translations as needed
   },
   ar: {
-    'app.name': 'فوتي دبي',
+    'app.name': 'فوتي سول',
     'auth.login': 'تسجيل الدخول',
     'auth.phone': 'هاتف',
     'auth.email': 'بريد إلكتروني',

@@ -41,10 +41,10 @@ export default function EditProfileScreen() {
         Alert.alert('Error', 'Not signed in');
         return;
       }
-      const { error } = await supabase
-        .from('profiles')
-        .update({ name: name.trim() || null, phone: phone.trim() || null })
-        .eq('user_id', user.id);
+      const { error } = await supabase.rpc('update_my_profile', {
+        p_name: name.trim() || null,
+        p_phone: phone.trim() || null,
+      });
       if (error) throw error;
       // Navigate back immediately — no blocking alert
       router.back();

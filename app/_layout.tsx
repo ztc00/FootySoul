@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+import { Stack, SplashScreen } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/lib/auth';
@@ -28,17 +28,35 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Keep the native splash screen visible until we decide to hide it.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
     const stripeKey = Constants.expoConfig?.extra?.stripePublishableKey || process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     if (stripeKey) {
       initializeStripe(stripeKey).catch(() => {});
     }
     setupDeepLinking();
-    registerForPushNotifications().catch(() => {});
+    registerForPushNotifications()
+      .catch(() => {})
+      .finally(() => {
+        // Small delay so the splash transition feels intentional
+        setTimeout(() => {
+          setIsAppReady(true);
+          SplashScreen.hideAsync().catch(() => {});
+        }, 600);
+      });
   }, []);
 
   const stripeKey = Constants.expoConfig?.extra?.stripePublishableKey || process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
+
+  if (!isAppReady) {
+    // While splash is still visible, render nothing behind it.
+    return null;
+  }
 
   return (
     <SafeAreaProvider>
